@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
+use std::time::Instant;
 
 use raytracer::{Config, run};
 use raytracer::vector::Point3;
@@ -21,9 +22,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         vup: Point3::new(0.0, 1.0, 0.0),
         aperture: 0.1,
         dist_to_focus: 10.0,
+        num_threads: 8,
+        batch_size: 1000,
     };
 
+
+    let now = Instant::now();
     let image = run(conf)?;
+    println!("Render time: {} ms.", now.elapsed().as_millis());
 
     let mut fh = File::create("test.ppm").expect("Unable to create the file 'test.ppm'.");
     writeln!(fh, "P3\n{} {}\n255", image_width, image_height)?;

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use rand::{Rng, thread_rng};
 use crate::vector::*;
 use crate::ray::*;
@@ -8,11 +8,11 @@ pub struct HitRecord {
     pub n: Vec3,
     pub t : f32,
     pub front: bool,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, n: Vec3, t: f32, mat: Rc<dyn Material>) -> Self {
+    pub fn new(p: Point3, n: Vec3, t: f32, mat: Arc<dyn Material>) -> Self {
         Self {p, n, t, front: true, mat}
     }
 
@@ -27,12 +27,12 @@ pub trait Hittable {
 }
 
 pub struct Scene {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
 }
 
 impl Scene {
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.objects.push(Rc::clone(&object));
+    pub fn add(&mut self, object: Arc<dyn Hittable + Send + Sync>) {
+        self.objects.push(Arc::clone(&object));
     }
 
     pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
@@ -56,7 +56,7 @@ impl Scene {
 pub struct Sphere<T: Material> {
     pub centre: Point3,
     pub radius: f32,
-    pub mat: Rc<T>,
+    pub mat: Arc<T>,
 }
 
 impl<T: Material + 'static> Hittable for Sphere<T> {
@@ -90,7 +90,7 @@ impl<T: Material + 'static> Hittable for Sphere<T> {
                 p,
                 outward_normal,
                 t,
-                Rc::clone(&self.mat) as Rc<dyn Material>
+                Arc::clone(&self.mat) as Arc<dyn Material>
             );
             rec.set_face_normal(r);
             return Some(rec);
