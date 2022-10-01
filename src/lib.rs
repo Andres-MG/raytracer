@@ -8,6 +8,7 @@ mod scenes;
 use std::error::Error;
 use rand::{Rng, thread_rng};
 use std::sync::{Arc, Mutex};
+use indicatif::ParallelProgressIterator;
 use rayon::{self, iter::*};
 use clap::Parser;
 
@@ -70,7 +71,7 @@ pub fn run(conf: &Config) -> Result<Vec<[i32; 3]>, Box<dyn Error>> {
     let final_loop = conf.image_width * conf.image_height % conf.batch_size;
 
     thread_pool.install(|| {
-        (0..full_loops).into_par_iter().for_each(|i| {
+        (0..full_loops).into_par_iter().progress_count(full_loops as u64).for_each(|i| {
             let start = i * conf.batch_size;
             let end = start + conf.batch_size;
             let image_ref = Arc::clone(&image);
