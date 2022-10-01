@@ -177,3 +177,14 @@ impl fmt::Display for Vec3 {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
 }
+
+impl<'s> From<&'s str> for Vec3 {
+    fn from(s: &'s str) -> Self {
+        let mut values = s.split(',');
+        Vec3 {
+            x: values.next().unwrap().parse::<f32>().unwrap(),
+            y: values.next().unwrap().parse::<f32>().unwrap(),
+            z: values.next().unwrap().parse::<f32>().unwrap(),
+        }
+    }
+}

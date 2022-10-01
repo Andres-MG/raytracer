@@ -1,5 +1,5 @@
-pub mod utilities;
-pub mod vector;
+mod utilities;
+mod vector;
 mod ray;
 mod objects;
 mod camera;
@@ -8,29 +8,41 @@ mod scenes;
 use std::error::Error;
 use rand::{Rng, thread_rng};
 use std::sync::{Arc, Mutex};
-use rayon::{self, prelude::*};
+use rayon::{self, iter::*};
+use clap::Parser;
 
 use camera::Camera;
 use ray::{ray_color, postprocess_color};
 use vector::{Point3, Color};
 use objects::Scene;
 
+#[derive(Parser)]
 pub struct Config {
-    pub aspect_ratio: f32,
+    #[clap(long, default_value_t = 500)]
     pub image_width: usize,
+    #[clap(long, default_value_t = 280)]
     pub image_height: usize,
+    #[clap(long, default_value_t = 20)]
     pub samples_per_pixel: usize,
+    #[clap(long, default_value_t = 10)]
     pub max_depth: usize,
+    #[clap(long, default_value = "13.0,2.0,3.0")]
     pub lookfrom: Point3,
+    #[clap(long, default_value = "0.0,0.0,0.0")]
     pub lookat: Point3,
+    #[clap(long, default_value = "0.0,1.0,0.0")]
     pub vup: Point3,
+    #[clap(long, default_value_t = 0.1)]
     pub aperture: f32,
+    #[clap(long, default_value_t = 10.0)]
     pub dist_to_focus: f32,
+    #[clap(long, default_value_t = 8)]
     pub num_threads: usize,
+    #[clap(long, default_value_t = 1000)]
     pub batch_size: usize,
 }
 
-pub fn run(conf: Config) -> Result<Vec<[i32; 3]>, Box<dyn Error>> {
+pub fn run(conf: &Config) -> Result<Vec<[i32; 3]>, Box<dyn Error>> {
 
     let image = Arc::new(Mutex::new(vec![[0, 0, 0]; conf.image_height * conf.image_width]));
 
@@ -39,7 +51,7 @@ pub fn run(conf: Config) -> Result<Vec<[i32; 3]>, Box<dyn Error>> {
         conf.lookat,
         conf.vup,
         30.0,
-        conf.aspect_ratio,
+        conf.image_width as f32 / conf.image_height as f32,
         conf.aperture,
         conf.dist_to_focus,
     );
